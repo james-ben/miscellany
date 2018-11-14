@@ -38,19 +38,13 @@ def main():
 	global listbox, root
 
 	# check if the right packages are installed
-	# cache = apt.Cache()
-	# if cache['enscript'].is_installed:
-	# 	print("enscript is not installed")
-	# 	return
-	# if cache['ps2pdf'].is_installed:
-	# 	print("ghostscript is not installed")
-	# 	return
-	cmd1 = 'type enscript >/dev/null 2>&1 || { echo >&2 "I require enscript but it is not installed.  Aborting."; exit 1; }'
-	cmd2 = 'type ps2pdf >/dev/null 2>&1 || { echo >&2 "I require ghostscript but it is not installed.  Aborting."; exit 1; }'
-	cmdval1 = os.system(cmd1)
-	cmdval2 = os.system(cmd2)
-	if (cmdval1 or cmdval2):
-		return 1
+	c = apt.Cache()
+	if not c['enscript'].is_installed:
+		print("enscript is not installed")
+		return
+	if not c['ghostscript'].is_installed:
+		print("ghostscript is not installed")
+		return
 
 	# create a window
 	root = tkinter.Tk()
