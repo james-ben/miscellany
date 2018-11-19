@@ -17,6 +17,36 @@ root = None
 tabSize = 4
 
 
+def sortFileList():
+	global filelist
+	# sort it alphabetically
+	files = sorted(filelist)
+	# switch the ordering of any .c and .h files that go together
+	for i in range(len(files)-1):
+		cur = files[i]
+		nex = files[i+1]
+		if cur[:-1] == nex[:-1]:
+			# swap
+			files[i], files[i+1] = files[i+1], files[i]
+	return files
+
+
+# runs the formatting script
+def runFormatter():
+	global filelist
+	if len(filelist) > 0:
+		outfile = "test_formatting.pdf"
+		files = sortFileList()
+		allStrings = ' '.join(files)
+		# this is a hacky way to do it
+		f_cmd = "echo {} |  xargs enscript --color=1 --tabsize={} -C -B -M Letter -Ec -fCourier8 -o - | ps2pdf - {}".format(allStrings, tabSize, )
+		os.system(f_cmd)
+		print("Files have been formatted and written to {}".format(outfile))
+		sys.exit(0)
+	else:
+		return
+
+
 # gets source files for the formatting script
 def getSources():
 	# get the files you want
@@ -26,18 +56,32 @@ def getSources():
 		filelist.append(f.name)
 
 
-# runs the formatting script
-def runFormatter():
-	allStrings = ' '.join(filelist)
-	# this is a hacky way to do it
-	f_cmd = "echo {} | sed '/CMakeFiles/d' | sort -r |  xargs enscript --color=1 --tabsize={} -C -B -M Letter -Ec -fCourier8 -o - | ps2pdf - {}".format(allStrings, tabSize, "test_formatting.pdf")
-	os.system(f_cmd)
-	sys.exit(0)
+def getDir():
+	# get all the files in a directory
+	dirname = filedialog.askdirectory(title='Choose source directories')
+	if dirname:
+		# print(dirname)
+		files = os.listdir(dirname)
+		for f in files:
+			f = dirname + '/' + f
+			listbox.insert(tkinter.END, f)
+			filelist.append(f)
+
+
+# removes files from the list
+def delFiles():
+	global listbox, filelist
+	selection = listbox.curselection()
+	if selection:
+		listbox.delete(selection[0])
+		del filelist[selection[0]]
+
 
 def main():
 	global listbox, root
 
 	# check if the right packages are installed
+	#  this is specific to Ubuntu distributions, or others using APT package manager
 	c = apt.Cache()
 	if not c['enscript'].is_installed:
 		print("enscript is not installed")
@@ -48,12 +92,20 @@ def main():
 
 	# create a window
 	root = tkinter.Tk()
-	tkinter.Button(root, text="Add files", command=getSources).pack()
+	# frames
+	top = tkinter.Frame(root)
+	top.pack(side=tkinter.TOP)
+	# bottom = tkinter.Frame(root)
+	# bottom.pack(side=tkinter.BOTTOM, fill=tkinter.BOTH, expand=True)
+
+	tkinter.Button(root, text="Add files", command=getSources).pack(in_=top, side=tkinter.LEFT)
+	tkinter.Button(root, text="Add folder", command=getDir).pack(in_=top, side=tkinter.LEFT)
+	tkinter.Button(root, text="Remove files", command=delFiles).pack(in_=top, side=tkinter.LEFT)
 
 	# this displays all the files you picked
 	listbox = tkinter.Listbox(root)
 	listbox.pack()
-	listbox.config(width=50)
+	listbox.config(width=75)
 
 	# run the formatting script
 	runButton = tkinter.Button(root, text="Format code", command=runFormatter)
@@ -61,8 +113,6 @@ def main():
 
 	# run
 	root.mainloop()
-
-
 
 
 if __name__ == '__main__':
