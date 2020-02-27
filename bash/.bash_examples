@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# This file shows examples of useful commands that I don't think would make good aliases or functions
+
+echo "Don't execute this file, silly!"
+exit -1
+
+# kill all the processes that match a regex and report which ones were killed
+# the [] in the regex make it so the process doesn't match itself
+# `tee /dev/tty` prints to the terminal
+# the `-r` flag for xargs means don't do anything if the input is empty
+ps aux | egrep "([r]enode|[g]db)" | tee /dev/tty | awk '{print $2}' | xargs -r kill
+# for really stubborn processes, add a `-9` onto the end
+
+# sum all the data from each line, assuming data is in first column
+# https://stackoverflow.com/a/450821
+awk '{s+=$1} END {print s}' mydatafile
+# if using numbers bigger than fit in 32bit integer format, use
+awk '{s+=$1} END {printf "%.0f\n", s}' mydatafile
+
+# renaming files - replace "OldText" with "NewText"
+for file in $(find . -type f -print); do mv $file $(echo "$file" | sed 's/OldText/NewText/g'); done
+
+# changing text in files
+find . -type f -print0 | xargs -0 sed -i 's/OldText/NewText/g' 
